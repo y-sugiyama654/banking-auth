@@ -26,6 +26,11 @@ func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (ah *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+	// TODO: Implementing Register API
+	writeResponse(w, http.StatusOK, "Register API not implemented yet...")
+}
+
 func writeResponse(w http.ResponseWriter, code int, data interface{}) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(code)
