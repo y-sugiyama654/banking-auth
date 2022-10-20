@@ -23,3 +23,16 @@ func (t AuthToken) NewAccessToken() (string, *errs.AppError) {
 	}
 	return signedString, nil
 }
+
+func NewAccessTokenFromRefreshToken(refreshToken string) (string, *errs.AppError) {
+	token, err := jwt.ParseWithClaims(refreshToken, &RefreshTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(HMAC_SAMPLE_SECRET), nil
+	})
+	if err != nil {
+		// do something...
+	}
+	r := token.Claims.(*RefreshTokenClaims)
+	accessTokenClaims := r.AccessTokenClaims()
+	authToken := NewAuthToken(accessTokenClaims)
+	return authToken.NewAccessToken()
+}
