@@ -13,6 +13,7 @@ type AuthRepositoryDb struct {
 
 type AuthRepository interface {
 	FindBy(username string, password string) (*Login, *errs.AppError)
+	RefreshTokenExists(string) *errs.AppError
 }
 
 func NewAuthRepository(client *sqlx.DB) AuthRepositoryDb {
@@ -36,6 +37,22 @@ func (d AuthRepositoryDb) FindBy(username string, password string) (*Login, *err
 			fmt.Println(err.Error())
 		}
 	}
-
 	return &login, nil
+}
+
+func (d AuthRepositoryDb) RefreshTokenExists(refreshToken string) *errs.AppError {
+	sqlSelect := "select refresh_token from refresh_token_store where refresh_token = ?"
+	var token string
+	var errTmp *errs.AppError
+	err := d.client.Get(&token, sqlSelect, refreshToken)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// TODO: Implementing Error Handling
+			return errTmp
+		} else {
+			// TODO: Implementing Error Handling
+			return errTmp
+		}
+	}
+	return nil
 }

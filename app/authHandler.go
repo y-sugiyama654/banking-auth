@@ -31,6 +31,22 @@ func (ah *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	writeResponse(w, http.StatusOK, "Register API not implemented yet...")
 }
 
+func (ah *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+	var refreshTokenRequest dto.RefreshTokenRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&refreshTokenRequest); err != nil {
+		// TODO: Add error log
+		w.WriteHeader(http.StatusBadRequest)
+	} else {
+		token, appError := ah.service.Refresh(refreshTokenRequest)
+		if appError != nil {
+			writeResponse(w, appError.Code, appError.AsMessage())
+		} else {
+			writeResponse(w, http.StatusOK, *token)
+		}
+	}
+}
+
 func writeResponse(w http.ResponseWriter, code int, data interface{}) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(code)
