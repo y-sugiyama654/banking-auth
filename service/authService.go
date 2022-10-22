@@ -10,10 +10,12 @@ import (
 type AuthService interface {
 	Login(dto.LoginRequest) (*dto.LoginResponse, *errs.AppError)
 	Refresh(dto.RefreshTokenRequest) (*dto.LoginResponse, *errs.AppError)
+	Verify(map[string]string) *errs.AppError
 }
 
 type DefaultAuthService struct {
-	repo domain.AuthRepository
+	repo            domain.AuthRepository
+	rolePermissions domain.RolePermissions
 }
 
 func (s DefaultAuthService) Login(req dto.LoginRequest) (*dto.LoginResponse, *errs.AppError) {
@@ -60,6 +62,46 @@ func (s DefaultAuthService) Refresh(req dto.RefreshTokenRequest) (*dto.LoginResp
 	return nil, errTmp
 }
 
-func NewAuthService(repository domain.AuthRepositoryDb) DefaultAuthService {
-	return DefaultAuthService{repository}
+func (s DefaultAuthService) Verify(urlParams map[string]string) *errs.AppError {
+	// convert the string token to JWT struct
+	if jtwToken, err := jwtTokenFromString(urlParams["token"]); err != nil {
+		// TODO: Add Error Handling
+		return nil
+	} else {
+		// Checking the validity of the token, this verifies the expiry time and the signature of the token
+		if jtwToken.Valid {
+			// type cast the token claims to jwt.MapClaims
+			claims := jtwToken.Claims.(*domain.AccessTokenClaims)
+			if claims.IsUserRole() {
+				if !claims.IsRequestVerifiedWithTokenClaims(urlParams) {
+					// TODO: Add Error Handling
+					return nil
+				}
+			}
+			isAuthorized := s.rolePermissions.IsAuthorizedFor(claims.Role, urlParams["routeName"])
+			if !isAuthorized {
+				// TODO: Add Error Handling
+				return nil
+			}
+			return nil
+		} else {
+			// TODO: Add Error Handling
+			return nil
+		}
+	}
+}
+
+func NewAuthService(repository domain.AuthRepositoryDb, permissions domain.RolePermissions) DefaultAuthService {
+	return DefaultAuthService{repository, permissions}
+}
+
+func jwtTokenFromString(tokenString string) (*jwt.Token, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &domain.AccessTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(domain.HMAC_SAMPLE_SECRET), nil
+	})
+	if err != nil {
+		// TODO: Add Error log
+		return nil, err
+	}
+	return token, nil
 }
