@@ -21,13 +21,14 @@ func Start() {
 	// dependency injection
 	dbClient := getDbClient()
 	authRepository := domain.NewAuthRepository(dbClient)
-	authService := service.NewAuthService(authRepository)
+	authService := service.NewAuthService(authRepository, domain.GetRolePermissions())
 	ah := AuthHandler{authService}
 
 	// router
 	router.HandleFunc("/auth/login", ah.Login).Methods(http.MethodPost)
 	router.HandleFunc("/auth/register", ah.Register).Methods(http.MethodPost)
 	router.HandleFunc("/auth/refresh", ah.Refresh).Methods(http.MethodPost)
+	router.HandleFunc("/auth/verify", ah.Verify).Methods(http.MethodGet)
 
 	// starting server
 	address := os.Getenv("SERVER_ADDRESS")
