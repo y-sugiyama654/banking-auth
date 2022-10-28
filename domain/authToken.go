@@ -1,9 +1,9 @@
 package domain
 
 import (
-	"banking-auth/errs"
 	"fmt"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/y-sugiyama654/banking-lib/errs"
 )
 
 type AuthToken struct {
