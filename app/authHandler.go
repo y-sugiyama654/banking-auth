@@ -4,6 +4,7 @@ import (
 	"banking-auth/dto"
 	"banking-auth/service"
 	"encoding/json"
+	"github.com/y-sugiyama654/banking-lib/logger"
 	"net/http"
 )
 
@@ -14,7 +15,7 @@ type AuthHandler struct {
 func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var loginRequest dto.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&loginRequest); err != nil {
-		// TODO: Add error log
+		logger.Error("Error while decoding login request: " + err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 	} else {
 		token, appError := ah.service.Login(loginRequest)
@@ -58,7 +59,7 @@ func (ah *AuthHandler) Verify(w http.ResponseWriter, r *http.Request) {
 	if urlParams["token"] != "" {
 		appErr := ah.service.Verify(urlParams)
 		if appErr != nil {
-			writeResponse(w, appErr.Code, notAuthorizedResponse(appErr.Message))
+			writeResponse(w, http.StatusForbidden, notAuthorizedResponse(appErr.Message))
 		} else {
 			writeResponse(w, http.StatusOK, authorizedResponse())
 		}

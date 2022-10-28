@@ -1,10 +1,10 @@
 package domain
 
 import (
-	"banking-auth/errs"
 	"database/sql"
-	"fmt"
 	"github.com/jmoiron/sqlx"
+	"github.com/y-sugiyama654/banking-lib/errs"
+	"github.com/y-sugiyama654/banking-lib/logger"
 )
 
 type AuthRepositoryDb struct {
@@ -28,13 +28,10 @@ func (d AuthRepositoryDb) FindBy(username string, password string) (*Login, *err
                 GROUP BY a.customer_id`
 	if err := d.client.Get(&login, sqlVerify, username, password); err != nil {
 		if err == sql.ErrNoRows {
-			// TODO: Add error handling
-			fmt.Println("invalid credentials")
-			fmt.Println(err.Error())
+			return nil, errs.NewAuthenticationError("invalid credentials")
 		} else {
-			// TODO: Add error handling
-			fmt.Println("Unexpected database error")
-			fmt.Println(err.Error())
+			logger.Error("Error while verifying login request from database: " + err.Error())
+			return nil, errs.NewUnexpectedError("Unexpected database error.")
 		}
 	}
 	return &login, nil

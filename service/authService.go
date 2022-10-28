@@ -3,8 +3,8 @@ package service
 import (
 	"banking-auth/domain"
 	"banking-auth/dto"
-	"banking-auth/errs"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/y-sugiyama654/banking-lib/errs"
 )
 
 type AuthService interface {
