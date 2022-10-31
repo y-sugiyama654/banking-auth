@@ -36,7 +36,7 @@ func (ah *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	var refreshTokenRequest dto.RefreshTokenRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&refreshTokenRequest); err != nil {
-		// TODO: Add error log
+		logger.Error("Error while decoding refresh token request: " + err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 	} else {
 		token, appError := ah.service.Refresh(refreshTokenRequest)

@@ -7,6 +7,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
+	"github.com/y-sugiyama654/banking-lib/logger"
 	"log"
 	"net/http"
 	"os"
@@ -48,8 +49,7 @@ func sanityCheck() {
 	}
 	for _, k := range envProps {
 		if os.Getenv(k) == "" {
-			// TODO: Edit Error Log
-			fmt.Sprintf("Environment variable %s not defined. Terminating application.", k)
+			logger.Error(fmt.Sprintf("Environment variable %s not defined. Terminating application...", k))
 		}
 	}
 }

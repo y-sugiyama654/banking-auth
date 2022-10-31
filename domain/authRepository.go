@@ -40,15 +40,13 @@ func (d AuthRepositoryDb) FindBy(username string, password string) (*Login, *err
 func (d AuthRepositoryDb) RefreshTokenExists(refreshToken string) *errs.AppError {
 	sqlSelect := "select refresh_token from refresh_token_store where refresh_token = ?"
 	var token string
-	var errTmp *errs.AppError
 	err := d.client.Get(&token, sqlSelect, refreshToken)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			// TODO: Implementing Error Handling
-			return errTmp
+			return errs.NewAuthenticationError("refresh token not registered in the store")
 		} else {
-			// TODO: Implementing Error Handling
-			return errTmp
+			logger.Error("Unexpected database error: " + err.Error())
+			return errs.NewUnexpectedError("unexpected database error")
 		}
 	}
 	return nil
