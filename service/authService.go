@@ -3,8 +3,10 @@ package service
 import (
 	"banking-auth/domain"
 	"banking-auth/dto"
+	"fmt"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/y-sugiyama654/banking-lib/errs"
+	"github.com/y-sugiyama654/banking-lib/logger"
 )
 
 type AuthService interface {
@@ -40,9 +42,6 @@ func (s DefaultAuthService) Login(req dto.LoginRequest) (*dto.LoginResponse, *er
 }
 
 func (s DefaultAuthService) Refresh(req dto.RefreshTokenRequest) (*dto.LoginResponse, *errs.AppError) {
-	// TODO: エラーハンドリングは後で実装する
-	var errTmp *errs.AppError
-
 	if vErr := req.IsAccessTokenValid(); vErr != nil {
 		if vErr.Errors == jwt.ValidationErrorExpired {
 			// continue with the refresh token functionality
@@ -57,16 +56,15 @@ func (s DefaultAuthService) Refresh(req dto.RefreshTokenRequest) (*dto.LoginResp
 			}
 			return &dto.LoginResponse{AccessToken: accessToken}, nil
 		}
-		return nil, errTmp
+		return nil, errs.NewAuthenticationError("invalid token")
 	}
-	return nil, errTmp
+	return nil, errs.NewAuthenticationError("cannot generate a new access token until the current one expires")
 }
 
 func (s DefaultAuthService) Verify(urlParams map[string]string) *errs.AppError {
 	// convert the string token to JWT struct
 	if jtwToken, err := jwtTokenFromString(urlParams["token"]); err != nil {
-		// TODO: Add Error Handling
-		return nil
+		return errs.NewAuthorizationError(err.Error())
 	} else {
 		// Checking the validity of the token, this verifies the expiry time and the signature of the token
 		if jtwToken.Valid {
@@ -74,19 +72,16 @@ func (s DefaultAuthService) Verify(urlParams map[string]string) *errs.AppError {
 			claims := jtwToken.Claims.(*domain.AccessTokenClaims)
 			if claims.IsUserRole() {
 				if !claims.IsRequestVerifiedWithTokenClaims(urlParams) {
-					// TODO: Add Error Handling
-					return nil
+					return errs.NewAuthorizationError("request not verified with the token claims")
 				}
 			}
 			isAuthorized := s.rolePermissions.IsAuthorizedFor(claims.Role, urlParams["routeName"])
 			if !isAuthorized {
-				// TODO: Add Error Handling
-				return nil
+				return errs.NewAuthorizationError(fmt.Sprintf("%s role is not authorized", claims.Role))
 			}
 			return nil
 		} else {
-			// TODO: Add Error Handling
-			return nil
+			return errs.NewAuthorizationError("Invalid token")
 		}
 	}
 }
@@ -100,7 +95,7 @@ func jwtTokenFromString(tokenString string) (*jwt.Token, error) {
 		return []byte(domain.HMAC_SAMPLE_SECRET), nil
 	})
 	if err != nil {
-		// TODO: Add Error log
+		logger.Error("Error while parsing token: " + err.Error())
 		return nil, err
 	}
 	return token, nil

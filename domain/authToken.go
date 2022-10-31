@@ -1,9 +1,9 @@
 package domain
 
 import (
-	"fmt"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/y-sugiyama654/banking-lib/errs"
+	"github.com/y-sugiyama654/banking-lib/logger"
 )
 
 type AuthToken struct {
@@ -18,8 +18,8 @@ func NewAuthToken(claims AccessTokenClaims) AuthToken {
 func (t AuthToken) NewAccessToken() (string, *errs.AppError) {
 	signedString, err := t.token.SignedString([]byte(HMAC_SAMPLE_SECRET))
 	if err != nil {
-		// TODO: Add Error Handling
-		fmt.Println("Failed while signing access token: " + err.Error())
+		logger.Error("Failed while signing access token: " + err.Error())
+		return "", errs.NewUnexpectedError("cannot generate access token")
 	}
 	return signedString, nil
 }
