@@ -42,7 +42,6 @@ func sanityCheck() {
 		"SERVER_ADDRESS",
 		"SERVER_PORT",
 		"DB_USER",
-		"DB_PASSWORD",
 		"DB_ADDR",
 		"DB_PORT",
 		"DB_NAME",
